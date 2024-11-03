@@ -1,7 +1,7 @@
 package services
 
 type Wireguard struct {
-	ServerAddress string
+	ServerAddress string          `yaml:"-"`
 	Image         string          `yaml:"image"`
 	ContainerName string          `yaml:"container_name"`
 	Ports         []string        `yaml:"ports"`

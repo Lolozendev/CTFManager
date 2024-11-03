@@ -21,7 +21,7 @@ func main() {
 
 	logger.Info("creating team ", os.Args[3])
 
-	serialized, err := serializer.SerializeTeam(1, os.Args[3], []string{"user1", "user2"})
+	serialized, err := serializer.SerializeTeam(1, os.Args[4], []string{"user1", "user2"})
 	if err != nil {
 		logger.Error("Error: ", err)
 		return

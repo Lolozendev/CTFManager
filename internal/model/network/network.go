@@ -1,7 +1,7 @@
 package network
 
 type Network struct {
-	TeamNetwork TeamNetwork `yaml:"<TEAM_NUMBER>-Network"`
+	TeamNetwork TeamNetwork `yaml:"<TEAM_NAME>-Network"`
 }
 
 type TeamNetwork struct {
@@ -10,11 +10,12 @@ type TeamNetwork struct {
 }
 
 type Ipam struct {
-	Config Config `yaml:"config"`
+	Config []Config `yaml:"config"`
 }
 
 type Config struct {
-	Subnet string `yaml:"subnet"`
+	Subnet  string `yaml:"subnet"`
+	Gateway string `yaml:"gateway"`
 }
 
 /*

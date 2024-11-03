@@ -8,10 +8,10 @@ type Dnsmasq struct {
 }
 
 type DnsmasqNetworks struct {
-	TeamNetwork DnsmasqTeamNetwork `yaml:"<TEAM_NAME>-Network"`
+	TeamNetwork DnsmasqNetwork `yaml:"<TEAM_NAME>-Network"`
 }
 
-type DnsmasqTeamNetwork struct {
+type DnsmasqNetwork struct {
 	Ipv4Address string `yaml:"ipv4_address"`
 }
 

@@ -10,9 +10,9 @@ type Member struct {
 }
 
 type Team struct {
-	Name     string
-	Number int
-	Members  []Member
+	Name     string            `yaml:"-"`
+	Number   int               `yaml:"-"`
+	Members  []Member          `yaml:"-"`
 	Network  network.Network   `yaml:"networks"`
 	Services services.Services `yaml:"services"`
 }

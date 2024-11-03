@@ -53,19 +53,24 @@ func makeChallengeSection(challenges []services.Challenge, teamName string) (str
 			logger.Errorf("Error: %v", err)
 			return "", err
 		}
+
+		_, err = fmt.Fprintln(&challengesSection, fmt.Sprintf("%s:", challenge.Name))
+		if err != nil {
+			logger.Error("Error: Cannot append challenge name key to challenges section")
+			return "", err
+		}
+
 		challengeYaml := string(challengeBytes)
+		challengeYaml = strings.ReplaceAll(challengeYaml, "<TEAM_NAME>", teamName)
+		challengeYaml = strings.ReplaceAll(challengeYaml, "<CHALLENGE_NAME>", challenge.Name)
+		challengeYaml = indentText(challengeYaml, 4)
 
-		_, err = fmt.Fprintln(&challengesSection, strings.ReplaceAll(challengeYaml, "<TEAM_NAME>", teamName))
+		_, err = fmt.Fprintln(&challengesSection, challengeYaml)
 		if err != nil {
 			logger.Error("Error: Cannot append challenge to challenges section")
 			return "", err
 		}
 
-		_, err = fmt.Fprintln(&challengesSection, strings.ReplaceAll(challengeYaml, "<CHALLENGE_NAME>", challenge.Name))
-		if err != nil {
-			logger.Error("Error: Cannot append challenge to challenges section")
-			return "", err
-		}
 	}
 
 	challengesYaml := indentText(challengesSection.String(), 4)
@@ -81,7 +86,8 @@ func makeTeamSection(team *model.Team) (string, error) {
 	}
 	teamYaml := string(teamBytes)
 
-	teamYaml = strings.ReplaceAll(teamYaml, "<TEAM_NAME>", teamYaml)
+	teamYaml = strings.ReplaceAll(teamYaml, "<TEAM_NAME>", team.Name)
+	teamYaml = strings.ReplaceAll(teamYaml, "<TEAM_NUMBER>", string(team.Number))
 
 	return teamYaml, nil
 }
@@ -133,8 +139,11 @@ func makeTeamStructure(teamNumber int, teamName string, teamMembers []string) (*
 			TeamNetwork: network.TeamNetwork{
 				Driver: "bridge",
 				Ipam: network.Ipam{
-					Config: network.Config{
-						Subnet: fmt.Sprintf("10.0.%d.0/24", teamNumber),
+					Config: []network.Config{
+						{
+							Subnet:  fmt.Sprintf("10.0.%d.0/24", teamNumber),
+							Gateway: fmt.Sprintf("10.0.%d.254", teamNumber),
+						},
 					},
 				},
 			},
@@ -143,14 +152,31 @@ func makeTeamStructure(teamNumber int, teamName string, teamMembers []string) (*
 			Wireguard: services.Wireguard{
 				Image:         "linuxserver/wireguard",
 				ContainerName: fmt.Sprintf("%s-wireguard", teamName),
-				Ports:         []string{fmt.Sprintf("50%3d:51820/udp", teamNumber)},
+				Ports:         []string{fmt.Sprintf("50%03d:51820/udp", teamNumber)},
+				Environment: []string{
+					"PUID=1000",
+					"PGID=1000",
+					"TZ=Europe/Paris",
+					fmt.Sprintf("PEERS=%d", len(teamMembers)), //TODO: make teamMembers a list of team members like: "user1, user2, user3"
+					fmt.Sprintf("PEERDNS=10.0.%d.253", teamNumber),
+					fmt.Sprintf("ALLOWEDIPS=10.0.%d.0/24", teamNumber),
+					"SERVERURL=127.0.0.1", //replace with the server's IP
+					fmt.Sprintf("SERVERPORT=50%03d", teamNumber),
+				},
+				Volumes: []string{"./config:/config"},
+				CapAdd:  []string{"NET_ADMIN"},
+				Network: services.WiregardNetwork{
+					TeamNetwork: services.WiregardTeamNetwork{
+						Ipv4Address: fmt.Sprintf("10.0.%d.252", teamNumber),
+					},
+				},
 			},
 			Dnsmasq: services.Dnsmasq{
 				Image:         "strm/dnsmasq",
 				ContainerName: fmt.Sprintf("%s-dnsmasq", teamName),
 				Volumes:       []string{"./dns/dnsmasq.conf:/etc/dnsmasq.conf"},
 				Network: services.DnsmasqNetworks{
-					TeamNetwork: services.DnsmasqTeamNetwork{
+					TeamNetwork: services.DnsmasqNetwork{
 						Ipv4Address: fmt.Sprintf("10.0.%d.253", teamNumber),
 					},
 				},

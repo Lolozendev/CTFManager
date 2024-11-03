@@ -1,9 +1,9 @@
 package services
 
 type Challenge struct {
-	Name          string
+	Name          string            `yaml:"-"`
 	Build         string            `yaml:"build"`
-	ContainerName string            `yaml:"<TEAM_NAME>-<CHALLENGE_NAME>"`
+	ContainerName string            `yaml:"container_name"`
 	EnvFile       string            `yaml:"env_file,omitempty"`
 	Networks      ChallengeNetworks `yaml:"networks"`
 }
