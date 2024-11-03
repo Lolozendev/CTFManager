@@ -1,3 +1,5 @@
+// This doesn't returns any value, it just logs the errors and warnings because in a near future , it will handle the errors and warnings on its own.
+
 package challengemanager
 
 import (
@@ -9,13 +11,14 @@ import (
 	"strings"
 
 	"github.com/Lolozendev/CTFManager/internal"
+	"github.com/Lolozendev/CTFManager/internal/constants"
 	"go.uber.org/zap"
 )
 
 const (
-	ChallengesPath                 string = "/challenges"
-	ChallengesFirstNetworkPosition int    = 11
-	ChallengesLastNetworkPosition  int    = 249
+	ChallengesPath                 string = constants.ChallengesPath
+	ChallengesFirstNetworkPosition int    = constants.ChallengesFirstNetworkPosition
+	ChallengesLastNetworkPosition  int    = constants.ChallengesLastNetworkPosition
 )
 
 var (
@@ -23,29 +26,34 @@ var (
 	logger               *zap.SugaredLogger = internal.GetLogger()
 )
 
-func normalizeChallengeName(name string) {
+func normalizeChallengeName(name string) bool {
+	foundError := false
 	if !ChallengesNameRegexp.MatchString(name) {
 		logger.Error("Error: ", name, " does not match the expected format")
 		if regexp.MustCompile(`\w*`).MatchString(name) {
 			logger.Info("Renaming ", name, " to a disabled challenge")
-			var newname = "x-" + name
+			newname := "x-" + name
 			os.Rename(ChallengesPath+"/"+name, ChallengesPath+"/"+newname)
 		} else {
 			logger.Error("Error: cannot rename ", name, " to a disabled challenge, make sure the challenge name is alphanumeric only")
 			//TODO: Add a way to Normalize the name to remove special characters
+			foundError = true
 		}
 	}
+	return foundError
 }
 
-func CheckChallengeNames() {
+func checkChallengeNames() bool {
+	foundError := false
 	entries, err := os.ReadDir(ChallengesPath)
 	if err != nil {
 		logger.Error("Error: ", err)
 	}
 
 	for _, entry := range entries {
-		normalizeChallengeName(entry.Name())
+		foundError = normalizeChallengeName(entry.Name())
 	}
+	return foundError
 }
 
 func checkDuplicatesAndHoles() (map[int]string, error) {
@@ -54,7 +62,7 @@ func checkDuplicatesAndHoles() (map[int]string, error) {
 		logger.Error("Error: ", err)
 	}
 
-	var actualChallenges = make(map[int]string, 0)
+	actualChallenges := make(map[int]string, 0)
 
 	for _, entry := range entries {
 		digit, name, _ := strings.Cut(entry.Name(), "-")
@@ -100,11 +108,21 @@ func checkChallengeStructure(path string) bool {
 			return false
 		}
 	}
+	if _, err := os.Stat(path + "/.env"); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			logger.Error("Error: ", path, ` does not have a .env file, 
+			please create one even if it is empty`)
+			return false
+		} else {
+			logger.Error("Unkown error: ", err)
+			return false
+		}
+	}
 	return true
 }
 
-func CheckChallengesStructure() bool {
-	var foundError bool = false
+func checkChallengesStructure() bool {
+	foundError := false
 	entries, err := os.ReadDir(ChallengesPath)
 	if err != nil {
 		logger.Error("Error: ", err)
@@ -155,10 +173,50 @@ func CheckChallengeDirectory() bool {
 		return false
 	}
 
+	if checkChallengeNames() {
+		return false
+	}
+
 	_, err = checkDuplicatesAndHoles()
 	if err != nil {
 		return false
 	}
 
-	return CheckChallengesStructure()
+	return checkChallengesStructure()
+}
+
+func GetChallenges() []string {
+	entries, err := os.ReadDir(ChallengesPath)
+	if err != nil {
+		logger.Error("Error: ", err)
+	}
+
+	challenges := make([]string, 0)
+
+	for _, entry := range entries {
+		challenges = append(challenges, entry.Name())
+	}
+	return challenges
+}
+
+func GetActivatedChallenges() []string {
+	challenges := GetChallenges()
+	activatedChallenges := make([]string, 0)
+	for _, challenge := range challenges {
+		if !strings.HasPrefix(challenge, "x-") {
+			activatedChallenges = append(activatedChallenges, challenge)
+		}
+	}
+	return activatedChallenges
+}
+
+func GetDisabledChallenges() []string {
+	challenges := GetChallenges()
+	disabledChallenges := make([]string, 0)
+	for _, challenge := range challenges {
+		if strings.HasPrefix(challenge, "x-") {
+			disabledChallenges = append(disabledChallenges, challenge)
+		}
+	}
+	return disabledChallenges
 }

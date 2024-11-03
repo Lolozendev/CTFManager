@@ -1,7 +1,7 @@
 package network
 
 type Network struct {
-	TeamNetwork TeamNetwork `yaml:"{ TEAM_NAME }-Network"`
+	TeamNetwork TeamNetwork `yaml:"<TEAM_NUMBER>-Network"`
 }
 
 type TeamNetwork struct {
@@ -19,8 +19,8 @@ type Config struct {
 
 /*
 networks:
-  { TEAM_NAME }-Network:
-    driver: bridge
-	ipam:
-	  config:
+	<TEAM_NAME>-Network:
+    	driver: bridge
+		ipam:
+	  		config: 10.0.<TEAM_NUMBER>.0/24
 */

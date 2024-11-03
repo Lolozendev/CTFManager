@@ -8,7 +8,7 @@ type Dnsmasq struct {
 }
 
 type DnsmasqNetworks struct {
-	TeamNetwork DnsmasqTeamNetwork `yaml:"{ TEAM_NAME }-Network"`
+	TeamNetwork DnsmasqTeamNetwork `yaml:"<TEAM_NAME>-Network"`
 }
 
 type DnsmasqTeamNetwork struct {
@@ -23,6 +23,6 @@ dnsmasq:
 	cap_add:
 	- NET_ADMIN
 	networks:
-		team_network:
-			ipv4_address: 10.0.{ TEAM_NUMBER }.253
+		<TEAM_NAME>-Network:
+			ipv4_address: 10.0.<TEAM_NUMBER>.253
 */

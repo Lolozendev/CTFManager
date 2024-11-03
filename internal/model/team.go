@@ -11,6 +11,7 @@ type Member struct {
 
 type Team struct {
 	Name     string
+	Number int
 	Members  []Member
 	Network  network.Network   `yaml:"networks"`
 	Services services.Services `yaml:"services"`
