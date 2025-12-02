@@ -122,13 +122,13 @@ func (m *Manager) Validate() error {
 
 // validateChallengeStructure checks if a challenge has required files
 func (m *Manager) validateChallengeStructure(ch model.Challenge) error {
-	// Check for Dockerfile
-	dockerfilePath := filepath.Join(ch.BuildPath, "Dockerfile")
+	// Check for Dockerfile_test
+	dockerfilePath := filepath.Join(ch.BuildPath, "Dockerfile_test")
 	if _, err := os.Stat(dockerfilePath); err != nil {
 		if os.IsNotExist(err) {
-			return errors.New("missing Dockerfile")
+			return errors.New("missing Dockerfile_test")
 		}
-		return fmt.Errorf("error checking Dockerfile: %w", err)
+		return fmt.Errorf("error checking Dockerfile_test: %w", err)
 	}
 
 	// Check for .env file
