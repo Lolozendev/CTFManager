@@ -137,6 +137,7 @@ func teamCreateCmd() *cobra.Command {
 			}
 
 			composeGen := compose.New(cfg, log)
+			preparedChallenges := composeGen.PrepareTeamChallenges(challenges, id)
 
 			teamModel := model.Team{
 				ID:      id,
@@ -145,7 +146,7 @@ func teamCreateCmd() *cobra.Command {
 				Enabled: true,
 			}
 
-			composeYAML, err := composeGen.Generate(teamModel, challenges)
+			composeYAML, err := composeGen.Generate(teamModel, preparedChallenges)
 			if err != nil {
 				return fmt.Errorf("failed to generate compose file: %w", err)
 			}

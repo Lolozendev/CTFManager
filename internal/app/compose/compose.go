@@ -3,6 +3,7 @@ package compose
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/Lolozendev/CTFManager/internal/config"
 	"github.com/Lolozendev/CTFManager/internal/model"
@@ -35,4 +36,29 @@ func (g *Generator) Generate(team model.Team, challenges []model.Challenge) (str
 	}
 
 	return string(data), nil
+}
+
+// PrepareTeamChallenges converts challenge list to team-specific configurations
+func (g *Generator) PrepareTeamChallenges(challenges []model.Challenge, teamID int) []model.Challenge {
+	prepared := make([]model.Challenge, len(challenges))
+
+	for i, ch := range challenges {
+		// Update paths to be absolute
+		prepared[i] = model.Challenge{
+			Name:      ch.Name,
+			NetworkID: ch.NetworkID,
+			BuildPath: g.config.GetChallengePath(
+				model.FormatChallengeName(ch.NetworkID, ch.Name, ch.Enabled),
+			),
+			EnvPath: filepath.Join(
+				g.config.GetChallengePath(
+					model.FormatChallengeName(ch.NetworkID, ch.Name, ch.Enabled),
+				),
+				".env",
+			),
+			Enabled: ch.Enabled,
+		}
+	}
+
+	return prepared
 }

@@ -10,7 +10,7 @@ import (
 type Challenge struct {
 	Name      string
 	NetworkID int    // Network position (11-249)
-	BuildPath string // Path to Dockerfile_test
+	BuildPath string // Path to Dockerfile
 	EnvPath   string // Path to .env file
 	Enabled   bool
 }
